@@ -10,6 +10,7 @@ const deployCmd = new Command("deploy")
     .option('--relayerThreshold <value>', 'Number of votes required for a proposal to pass', 2)
     .option('--fee <ether>', 'Fee to be taken when making a deposit (decimals allowed)', 0)
     .option('--expiry <blocks>', 'Numer of blocks after which a proposal is considered cancelled', 100)
+    .option('--phalaNFT', 'Phala NFT contract address')
     .option('--all', 'Deploy all contracts')
     .option('--bridge', 'Deploy bridge contract')
     .option('--erc20Handler', 'Deploy erc20Handler contract')
@@ -18,6 +19,7 @@ const deployCmd = new Command("deploy")
     .option('--erc20', 'Deploy erc20 contract')
     .option('--erc721', 'Deploy erc721 contract')
     .option('--centAsset', 'Deploy centrifuge asset contract')
+    .option('--btcLottery', 'Deploy phala BTC lottery contract')
     .action(async (args) => {
         await setupParentArgs(args, args.parent)
         let startBal = await args.provider.getBalance(args.wallet.address)
@@ -30,6 +32,7 @@ const deployCmd = new Command("deploy")
             await deployERC20(args)
             await deployERC721(args)
             await deployCentrifugeAssetStore(args);
+            await deployPhalaBTCLottery(args);
         } else {
             let deployed = false
             if (args.bridge) {
@@ -59,6 +62,10 @@ const deployCmd = new Command("deploy")
             if (args.centAsset) {
                 await deployCentrifugeAssetStore(args);
                 deployed = true
+            }
+            if (args.btcLottery) {
+                await deployPhalaBTCLottery(args);
+                deployed = true;
             }
 
             if (!deployed) {
@@ -103,6 +110,8 @@ Erc20:              ${args.erc20Contract ? args.erc20Contract : "Not Deployed"}
 Erc721:             ${args.erc721Contract ? args.erc721Contract : "Not Deployed"}
 ----------------------------------------------------------------
 Centrifuge Asset:   ${args.centrifugeAssetStoreContract ? args.centrifugeAssetStoreContract : "Not Deployed"}
+----------------------------------------------------------------
+Phala BTC Lottery:   ${args.phalaBTCLotteryContract ? args.phalaBTCLotteryContract : "Not Deployed"}
 ================================================================
         `)
 }
@@ -175,6 +184,14 @@ async function deployCentrifugeAssetStore(args) {
     await contract.deployed();
     args.centrifugeAssetStoreContract = contract.address
     console.log("✓ CentrifugeAssetStore contract deployed")
+}
+
+async function deployPhalaBTCLottery(args) {
+    const factory = new ethers.ContractFactory(constants.ContractABIs.PhalaBTCLottery.abi, constants.ContractABIs.PhalaBTCLottery.bytecode, args.wallet);
+    const contract = await factory.deploy(args.phalaNFT, args.bridgeContract, args.genericHandlerContract, { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
+    await contract.deployed();
+    args.phalaBTCLotteryContract = contract.address
+    console.log("✓ PhalaBTCLottery contract deployed")
 }
 
 module.exports = deployCmd

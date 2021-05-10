@@ -11,6 +11,7 @@ const {
     erc20,
     erc721,
     centrifuge,
+    lottery,
 } = require('./cmd/index');
 const constants = require('./constants');
 
@@ -28,6 +29,7 @@ program.addCommand(admin)
 program.addCommand(erc20)
 program.addCommand(erc721)
 program.addCommand(centrifuge)
+program.addCommand(lottery)
 
 program.allowUnknownOption(false);
 

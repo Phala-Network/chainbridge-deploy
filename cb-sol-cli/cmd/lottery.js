@@ -1,7 +1,7 @@
 const ethers = require('ethers');
 const {Command} = require('commander');
 
-const {setupParentArgs, log} = require("./utils")
+const {setupParentArgs, waitForTx, log} = require("./utils")
 
 const constants = require('../constants');
 
@@ -26,6 +26,7 @@ const depositCmd = new Command("deposit")
         if(args.op == 0) {
             console.log('construct newRound() arguments...');
             data = '0x' +
+            ethers.utils.hexZeroPad(ethers.utils.bigNumberify(13).toHexString(), 32).substr(2) +    // Deposit Amount        (32 bytes)
             ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.op)), 1).substr(2) +               // op           (4 bytes)
             ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.roundId)), 4).substr(2) +          // roundId      (4 bytes)
             ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.totalCount)), 4).substr(2) +       // totalCount   (4 bytes)
@@ -33,6 +34,7 @@ const depositCmd = new Command("deposit")
         } else if (args.op == 1) {
             console.log('construct openLottery() arguments...');
             data = '0x' +
+            ethers.utils.hexZeroPad(ethers.utils.bigNumberify(9+(args.btcAddr.length-2)/2).toHexString(), 32).substr(2) +    // Deposit Amount        (32 bytes)
             ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.op)), 1).substr(2) +               // op           (4 bytes)
             ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.roundId)), 4).substr(2) +          // roundId      (4 bytes)
             ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.tokenId)), 4).substr(2) +          // tokenId      (4 bytes)
@@ -45,8 +47,6 @@ const depositCmd = new Command("deposit")
         log(args, `  Resource Id: ${args.resourceId}`)
         log(args, `  Raw: ${data}`)
         log(args, `Creating deposit to initiate transfer!`);
-
-        return;
 
         // Make the deposit
         let tx = await bridgeInstance.deposit(

@@ -5,6 +5,14 @@ const {setupParentArgs, waitForTx, log} = require("./utils")
 
 const constants = require('../constants');
 
+function utf8ToHex(str) 
+{
+    return Array.from(str).map(c =>
+        c.charCodeAt(0) < 128 ? c.charCodeAt(0).toString(16) :
+        encodeURIComponent(c).replace(/\%/g,'').toLowerCase()
+    ).join('');
+}
+
 const depositCmd = new Command("deposit")
     .description("Initiates a bridge transfer")
     .option('--dest <id>', 'Destination chain ID', 1)
@@ -26,19 +34,20 @@ const depositCmd = new Command("deposit")
         if(args.op == 0) {
             console.log('construct newRound() arguments...');
             data = '0x' +
-            ethers.utils.hexZeroPad(ethers.utils.bigNumberify(13).toHexString(), 32).substr(2) +    // Deposit Amount        (32 bytes)
-            ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.op)), 1).substr(2) +               // op           (4 bytes)
-            ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.roundId)), 4).substr(2) +          // roundId      (4 bytes)
-            ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.totalCount)), 4).substr(2) +       // totalCount   (4 bytes)
-            ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.winnerCount)), 4).substr(2);       // winnerCount  (4 bytes)
+            ethers.utils.hexZeroPad(ethers.utils.bigNumberify(13).toHexString(), 32).substr(2) +            // command len  (32 bytes)
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.op)), 1).substr(2) +          // op           (4 bytes)
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.roundId)), 4).substr(2) +     // roundId      (4 bytes)
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.totalCount)), 4).substr(2) +  // totalCount   (4 bytes)
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.winnerCount)), 4).substr(2);  // winnerCount  (4 bytes)
         } else if (args.op == 1) {
             console.log('construct openLottery() arguments...');
             data = '0x' +
-            ethers.utils.hexZeroPad(ethers.utils.bigNumberify(9+(args.btcAddr.length-2)/2).toHexString(), 32).substr(2) +    // Deposit Amount        (32 bytes)
-            ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.op)), 1).substr(2) +               // op           (4 bytes)
-            ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.roundId)), 4).substr(2) +          // roundId      (4 bytes)
-            ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.tokenId)), 4).substr(2) +          // tokenId      (4 bytes)
-            args.btcAddr.substr(2);                                                             // btcAddr      (?? bytes)
+            ethers.utils.hexZeroPad(ethers.utils.bigNumberify(13+args.btcAddr.length).toHexString(), 32).substr(2) +    // command len      (32 bytes)
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.op)), 1).substr(2) +                      // op               (4 bytes)
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.roundId)), 4).substr(2) +                 // roundId          (4 bytes)
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(Number.parseInt(args.tokenId)), 4).substr(2) +                 // tokenId          (4 bytes)
+            ethers.utils.hexZeroPad(ethers.utils.bigNumberify(args.btcAddr.length).toHexString(), 4).substr(2) +        // btcAddress len   (4 bytes)
+            utf8ToHex(args.btcAddr);                                                                                    // btcAddr          (?? bytes)
         } else {
             throw new Error('Unsupported operation, expect 0 or 1');
         }

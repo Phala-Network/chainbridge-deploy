@@ -68,8 +68,33 @@ const depositCmd = new Command("deposit")
         await waitForTx(args.provider, tx.hash)
     })
 
+    const setNFTCmd = new Command("set-nft")
+    .description("Set NFT admin address")
+    .option('--address <address>', 'Lottery contract address', '')
+    .option('--nftAdmin <address>', 'New NFT admin address', '')
+    .action(async function (args) {
+        await setupParentArgs(args, args.parent.parent)
+
+        // Instances
+        const lotteryInstance = new ethers.Contract(args.address, constants.ContractABIs.PhalaBTCLottery.abi, args.wallet);
+
+        log(args, `Constructed NFT setting:`)
+        log(args, `  Lottery  contract: ${args.address}`)
+        log(args, `  NFT admin: ${args.nftAdmin}`)
+        log(args, `Creating NFT setting transfer!`);
+
+        // Make the transaction
+        let tx = await lotteryInstance.setNFTAdmin(
+            args.nftAdmin,
+            { gasPrice: args.gasPrice, gasLimit: args.gasLimit}
+        );
+
+        await waitForTx(args.provider, tx.hash)
+    })
+
 const lotteryCmd = new Command("lottery")
 
 lotteryCmd.addCommand(depositCmd)
+lotteryCmd.addCommand(setNFTCmd);
 
 module.exports = lotteryCmd

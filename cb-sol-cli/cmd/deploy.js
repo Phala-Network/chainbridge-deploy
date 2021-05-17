@@ -188,7 +188,7 @@ async function deployCentrifugeAssetStore(args) {
 
 async function deployPhalaBTCLottery(args) {
     const factory = new ethers.ContractFactory(constants.ContractABIs.PhalaBTCLottery.abi, constants.ContractABIs.PhalaBTCLottery.bytecode, args.wallet);
-    const contract = await factory.deploy(args.phalaNFT, args.genericHandlerContract, { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
+    const contract = await factory.deploy(args.genericHandlerContract, { gasPrice: args.gasPrice, gasLimit: args.gasLimit});
     await contract.deployed();
     args.phalaBTCLotteryContract = contract.address
     console.log("✓ PhalaBTCLottery contract deployed")
